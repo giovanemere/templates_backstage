@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${{ values.name }}-ns
+  labels:
+    name: ${{ values.name }}-ns
+    backstage.io/kubernetes-id: ${{ values.name }}

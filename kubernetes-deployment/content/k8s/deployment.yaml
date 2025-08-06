@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${{ values.name }}
+  labels:
+    app: ${{ values.name }}
+    backstage.io/kubernetes-id: ${{ values.name }}
+spec:
+  replicas: ${{ values.replicas }}
+  selector:
+    matchLabels:
+      app: ${{ values.name }}
+  template:
+    metadata:
+      labels:
+        app: ${{ values.name }}
+        backstage.io/kubernetes-id: ${{ values.name }}
+    spec:
+      containers:
+      - name: ${{ values.name }}
+        image: ${{ values.image }}
+        ports:
+        - containerPort: ${{ values.port }}
+          name: http
+        resources:
+          requests:
+            cpu: ${{ values.resources_requests_cpu }}
+            memory: ${{ values.resources_requests_memory }}
+          limits:
+            cpu: ${{ values.resources_limits_cpu }}
+            memory: ${{ values.resources_limits_memory }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        env:
+        - name: PORT
+          value: "${{ values.port }}"

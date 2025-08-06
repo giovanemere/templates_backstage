@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: infrastructure-templates
+  description: Templates de infraestructura para diferentes proveedores cloud
+spec:
+  targets:
+    - ./kubernetes-deployment/template.yaml
+    - ./aws-infrastructure/template.yaml
+    - ./azure-messaging/template.yaml
+    - ./gcp-storage/template.yaml
+    - ./oci-networking/template.yaml

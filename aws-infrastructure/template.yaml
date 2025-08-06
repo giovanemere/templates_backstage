@@ -1,0 +1,233 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aws-infrastructure-complete
+  title: Infraestructura AWS Completa
+  description: Template para desplegar Lambda, S3, EC2 y EKS en AWS usando Terraform
+  tags:
+    - aws
+    - terraform
+    - lambda
+    - s3
+    - ec2
+    - eks
+    - infrastructure
+spec:
+  owner: platform-team
+  type: infrastructure
+  
+  parameters:
+    - title: Información del Proyecto
+      required:
+        - name
+        - description
+        - aws_region
+      properties:
+        name:
+          title: Nombre del Proyecto
+          type: string
+          description: Nombre del proyecto (será usado como prefijo para todos los recursos)
+          pattern: '^[a-z0-9-]+$'
+          ui:autofocus: true
+          ui:help: 'Solo letras minúsculas, números y guiones'
+        description:
+          title: Descripción
+          type: string
+          description: Descripción del proyecto
+        owner:
+          title: Propietario
+          type: string
+          description: Equipo o persona responsable del proyecto
+          default: platform-team
+        aws_region:
+          title: Región de AWS
+          type: string
+          description: Región donde desplegar los recursos
+          default: us-east-1
+          enum:
+            - us-east-1
+            - us-west-2
+            - eu-west-1
+            - eu-central-1
+            - ap-southeast-1
+
+    - title: Configuración de Lambda
+      properties:
+        lambda_runtime:
+          title: Runtime de Lambda
+          type: string
+          description: Runtime para la función Lambda
+          default: python3.9
+          enum:
+            - python3.9
+            - python3.10
+            - python3.11
+            - nodejs18.x
+            - nodejs20.x
+            - java11
+            - java17
+        lambda_memory:
+          title: Memoria Lambda (MB)
+          type: number
+          description: Memoria asignada a la función Lambda
+          default: 128
+          minimum: 128
+          maximum: 10240
+        lambda_timeout:
+          title: Timeout Lambda (segundos)
+          type: number
+          description: Timeout para la función Lambda
+          default: 30
+          minimum: 1
+          maximum: 900
+
+    - title: Configuración de S3
+      properties:
+        s3_versioning:
+          title: Habilitar Versionado S3
+          type: boolean
+          description: Habilitar versionado en el bucket S3
+          default: true
+        s3_encryption:
+          title: Habilitar Encriptación S3
+          type: boolean
+          description: Habilitar encriptación en el bucket S3
+          default: true
+        s3_public_access:
+          title: Bloquear Acceso Público
+          type: boolean
+          description: Bloquear acceso público al bucket S3
+          default: true
+
+    - title: Configuración de EC2
+      properties:
+        ec2_instance_type:
+          title: Tipo de Instancia EC2
+          type: string
+          description: Tipo de instancia EC2
+          default: t3.micro
+          enum:
+            - t3.micro
+            - t3.small
+            - t3.medium
+            - t3.large
+            - m5.large
+            - m5.xlarge
+        ec2_key_pair:
+          title: Key Pair EC2
+          type: string
+          description: Nombre del key pair para acceso SSH (debe existir en AWS)
+          ui:help: 'Debe existir previamente en tu cuenta de AWS'
+        ec2_volume_size:
+          title: Tamaño del Volumen (GB)
+          type: number
+          description: Tamaño del volumen EBS en GB
+          default: 20
+          minimum: 8
+          maximum: 100
+
+    - title: Configuración de EKS
+      properties:
+        eks_version:
+          title: Versión de Kubernetes
+          type: string
+          description: Versión de Kubernetes para EKS
+          default: "1.28"
+          enum:
+            - "1.27"
+            - "1.28"
+            - "1.29"
+        eks_node_instance_type:
+          title: Tipo de Instancia para Nodos
+          type: string
+          description: Tipo de instancia para los nodos worker
+          default: t3.medium
+          enum:
+            - t3.small
+            - t3.medium
+            - t3.large
+            - m5.large
+            - m5.xlarge
+        eks_desired_capacity:
+          title: Capacidad Deseada de Nodos
+          type: number
+          description: Número deseado de nodos worker
+          default: 2
+          minimum: 1
+          maximum: 10
+        eks_max_capacity:
+          title: Capacidad Máxima de Nodos
+          type: number
+          description: Número máximo de nodos worker
+          default: 4
+          minimum: 1
+          maximum: 20
+        eks_min_capacity:
+          title: Capacidad Mínima de Nodos
+          type: number
+          description: Número mínimo de nodos worker
+          default: 1
+          minimum: 1
+          maximum: 10
+
+    - title: Configuración del Repositorio
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+              - gitlab.com
+
+  steps:
+    - id: fetch
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./content
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          aws_region: ${{ parameters.aws_region }}
+          lambda_runtime: ${{ parameters.lambda_runtime }}
+          lambda_memory: ${{ parameters.lambda_memory }}
+          lambda_timeout: ${{ parameters.lambda_timeout }}
+          s3_versioning: ${{ parameters.s3_versioning }}
+          s3_encryption: ${{ parameters.s3_encryption }}
+          s3_public_access: ${{ parameters.s3_public_access }}
+          ec2_instance_type: ${{ parameters.ec2_instance_type }}
+          ec2_key_pair: ${{ parameters.ec2_key_pair }}
+          ec2_volume_size: ${{ parameters.ec2_volume_size }}
+          eks_version: ${{ parameters.eks_version }}
+          eks_node_instance_type: ${{ parameters.eks_node_instance_type }}
+          eks_desired_capacity: ${{ parameters.eks_desired_capacity }}
+          eks_max_capacity: ${{ parameters.eks_max_capacity }}
+          eks_min_capacity: ${{ parameters.eks_min_capacity }}
+
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: This is ${{ parameters.name }}
+        repoUrl: ${{ parameters.repoUrl }}
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}

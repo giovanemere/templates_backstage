@@ -1,0 +1,29 @@
+# Ejemplo de archivo de variables para Terraform
+# Copia este archivo a terraform.tfvars y ajusta los valores según tus necesidades
+
+# Información del proyecto
+project_name = "${{ values.name }}"
+owner        = "${{ values.owner }}"
+aws_region   = "${{ values.aws_region }}"
+
+# Configuración de Lambda
+lambda_runtime = "${{ values.lambda_runtime }}"
+lambda_memory  = ${{ values.lambda_memory }}
+lambda_timeout = ${{ values.lambda_timeout }}
+
+# Configuración de S3
+s3_versioning    = ${{ values.s3_versioning }}
+s3_encryption    = ${{ values.s3_encryption }}
+s3_public_access = ${{ values.s3_public_access }}
+
+# Configuración de EC2
+ec2_instance_type = "${{ values.ec2_instance_type }}"
+ec2_key_pair      = "${{ values.ec2_key_pair }}"
+ec2_volume_size   = ${{ values.ec2_volume_size }}
+
+# Configuración de EKS
+eks_version             = "${{ values.eks_version }}"
+eks_node_instance_type  = "${{ values.eks_node_instance_type }}"
+eks_desired_capacity    = ${{ values.eks_desired_capacity }}
+eks_max_capacity        = ${{ values.eks_max_capacity }}
+eks_min_capacity        = ${{ values.eks_min_capacity }}

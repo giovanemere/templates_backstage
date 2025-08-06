@@ -1,0 +1,154 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: gcp-cloud-storage
+  title: GCP Cloud Storage Bucket
+  description: Template para desplegar Cloud Storage Bucket en Google Cloud Platform
+  tags:
+    - gcp
+    - terraform
+    - cloud-storage
+    - bucket
+spec:
+  owner: platform-team
+  type: infrastructure
+  
+  parameters:
+    - title: Información del Proyecto
+      required:
+        - name
+        - description
+        - gcp_project_id
+        - gcp_region
+      properties:
+        name:
+          title: Nombre del Proyecto
+          type: string
+          description: Nombre del proyecto (será usado como prefijo para recursos)
+          pattern: '^[a-z0-9-]+$'
+          ui:autofocus: true
+          ui:help: 'Solo letras minúsculas, números y guiones'
+        description:
+          title: Descripción
+          type: string
+          description: Descripción del proyecto
+        owner:
+          title: Propietario
+          type: string
+          description: Equipo o persona responsable del proyecto
+          default: platform-team
+        gcp_project_id:
+          title: GCP Project ID
+          type: string
+          description: ID del proyecto de Google Cloud
+          ui:help: 'Debe existir previamente en GCP'
+        gcp_region:
+          title: Región de GCP
+          type: string
+          description: Región donde desplegar los recursos
+          default: us-central1
+          enum:
+            - us-central1
+            - us-east1
+            - us-west1
+            - europe-west1
+            - europe-west2
+            - asia-southeast1
+            - asia-northeast1
+
+    - title: Configuración del Bucket
+      properties:
+        bucket_location:
+          title: Ubicación del Bucket
+          type: string
+          description: Ubicación geográfica del bucket
+          default: US
+          enum:
+            - US
+            - EU
+            - ASIA
+            - us-central1
+            - us-east1
+            - europe-west1
+            - asia-southeast1
+        storage_class:
+          title: Clase de Almacenamiento
+          type: string
+          description: Clase de almacenamiento por defecto
+          default: STANDARD
+          enum:
+            - STANDARD
+            - NEARLINE
+            - COLDLINE
+            - ARCHIVE
+        enable_versioning:
+          title: Habilitar Versionado
+          type: boolean
+          description: Habilitar versionado de objetos
+          default: true
+        enable_lifecycle:
+          title: Habilitar Lifecycle Management
+          type: boolean
+          description: Habilitar gestión automática del ciclo de vida
+          default: true
+        lifecycle_age_days:
+          title: Días para Lifecycle (NEARLINE)
+          type: number
+          description: Días después de los cuales mover a NEARLINE
+          default: 30
+          minimum: 1
+          maximum: 365
+
+    - title: Configuración del Repositorio
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+              - gitlab.com
+
+  steps:
+    - id: fetch
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./content
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          gcp_project_id: ${{ parameters.gcp_project_id }}
+          gcp_region: ${{ parameters.gcp_region }}
+          bucket_location: ${{ parameters.bucket_location }}
+          storage_class: ${{ parameters.storage_class }}
+          enable_versioning: ${{ parameters.enable_versioning }}
+          enable_lifecycle: ${{ parameters.enable_lifecycle }}
+          lifecycle_age_days: ${{ parameters.lifecycle_age_days }}
+
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: This is ${{ parameters.name }}
+        repoUrl: ${{ parameters.repoUrl }}
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
