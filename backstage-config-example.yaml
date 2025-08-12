@@ -1,0 +1,75 @@
+# Ejemplo de configuración para app-config.yaml de Backstage
+
+catalog:
+  # Configuración para importar templates
+  locations:
+    # Templates de infraestructura
+    - type: url
+      target: https://github.com/tu-usuario/templates_backstage/blob/main/catalog-info.yaml
+      rules:
+        - allow: [Template]
+
+  # Reglas de procesamiento
+  rules:
+    - allow: [Component, System, API, Resource, Location, Template]
+
+# Configuración del Scaffolder (para crear componentes)
+scaffolder:
+  # Configuración de templates
+  defaultAuthor:
+    name: Platform Team
+    email: platform@company.com
+  
+  # Configuración de GitHub (si usas GitHub)
+  github:
+    token: ${GITHUB_TOKEN}
+    visibility: public # o private
+
+# Configuración de integración con GitHub
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+# Configuración de autenticación (opcional)
+auth:
+  # Configuración de GitHub OAuth (ejemplo)
+  providers:
+    github:
+      development:
+        clientId: ${GITHUB_CLIENT_ID}
+        clientSecret: ${GITHUB_CLIENT_SECRET}
+
+# Configuración del backend
+backend:
+  # URL base de tu instancia de Backstage
+  baseUrl: http://localhost:3000
+  
+  # Configuración de CORS
+  cors:
+    origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+
+  # Configuración de la base de datos (ejemplo con PostgreSQL)
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+      database: ${POSTGRES_DB}
+
+# Configuración del frontend
+app:
+  title: Infrastructure Platform
+  baseUrl: http://localhost:3000
+
+# Configuración de TechDocs (documentación)
+techdocs:
+  builder: 'local'
+  generator:
+    runIn: 'local'
+  publisher:
+    type: 'local'
