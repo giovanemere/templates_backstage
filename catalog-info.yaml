@@ -1,12 +1,49 @@
-apiVersion: backstage.io/v1alpha1
-kind: Location
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
 metadata:
-  name: infrastructure-templates
-  description: Templates de infraestructura para diferentes proveedores cloud
+  name: templates_backstage-template
+  title: IA-Ops Templates
+  description: Templates de Backstage para la plataforma IA-Ops
+  tags:
+    - recommended
+    - template
+    - scaffolder
 spec:
-  targets:
-    - ./kubernetes-deployment/template.yaml
-    - ./aws-infrastructure/template.yaml
-    - ./azure-messaging/template.yaml
-    - ./gcp-storage/template.yaml
-    - ./oci-networking/template.yaml
+  owner: ia-ops-team
+  type: service
+  parameters:
+    - title: Service Information
+      required:
+        - name
+        - description
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Unique name of the service
+        description:
+          title: Description
+          type: string
+          description: Description of the service
+  steps:
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: templates_backstage
+  description: Templates de Backstage para la plataforma IA-Ops
+  annotations:
+    github.com/project-slug: giovanemere/templates_backstage
+spec:
+  type: library
+  lifecycle: production
+  owner: ia-ops-team
+  system: ia-ops-platform
