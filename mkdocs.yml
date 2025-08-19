@@ -1,0 +1,42 @@
+site_name: 'Templates Backstage'
+site_description: 'Plantillas y configuraciones para Backstage'
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - API: api.md
+  - Deployment: deployment.md
+  - Development: development.md
+
+plugins:
+  - techdocs-core
+  - search
+
+theme:
+  name: material
+  palette:
+    primary: blue
+    accent: blue
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.details
+  - toc:
+      permalink: true
+
+repo_url: https://github.com/giovanemere/templates_backstage
+edit_uri: edit/main/docs/
+
+extra:
+  version:
+    provider: mike
