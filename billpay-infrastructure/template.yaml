@@ -1,16 +1,17 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: billpay-infrastructure
-  title: BillPay Infrastructure
-  description: Template para desplegar infraestructura completa de BillPay (EKS, ECR, S3, CloudFront)
+  name: billpay-infrastructure-multicloud
+  title: BillPay Infrastructure Multi-Cloud
+  description: Template para desplegar infraestructura BillPay en AWS, GCP, Azure u OCI
   tags:
     - billpay
+    - multi-cloud
     - aws
-    - eks
-    - ecr
-    - s3
-    - cloudfront
+    - gcp
+    - azure
+    - oci
+    - kubernetes
     - opentofu
     - terragrunt
 spec:
@@ -20,9 +21,24 @@ spec:
   parameters:
     - title: Configuración del Proyecto
       required:
+        - cloud_provider
         - environment
-        - aws_region
+        - region
       properties:
+        cloud_provider:
+          title: Cloud Provider
+          type: string
+          description: Proveedor de nube donde desplegar
+          enum:
+            - aws
+            - gcp
+            - azure
+            - oci
+          enumNames:
+            - Amazon Web Services (AWS)
+            - Google Cloud Platform (GCP)
+            - Microsoft Azure
+            - Oracle Cloud Infrastructure (OCI)
         environment:
           title: Environment
           type: string
@@ -35,45 +51,80 @@ spec:
             - Development
             - Staging
             - Production
-        aws_region:
-          title: AWS Region
+        region:
+          title: Region
           type: string
-          description: Región de AWS donde desplegar
+          description: Región donde desplegar
           default: us-east-1
           enum:
             - us-east-1
             - us-west-2
             - eu-west-1
+            - us-central1
+            - europe-west1
+            - asia-east1
 
   steps:
     - id: log
       name: Log Parameters
       action: debug:log
       input:
-        message: 'Configurando BillPay Infrastructure para ${{ parameters.environment }} en ${{ parameters.aws_region }}'
+        message: 'Configurando BillPay Infrastructure en ${{ parameters.cloud_provider | upper }} para ${{ parameters.environment }} en ${{ parameters.region }}'
 
   output:
     text:
-      - title: Infraestructura BillPay Configurada
+      - title: Infraestructura BillPay Multi-Cloud Configurada
         content: |
           ## ✅ Configuración Completada
           
+          **Cloud Provider:** ${{ parameters.cloud_provider | upper }}
           **Environment:** ${{ parameters.environment }}
-          **Region:** ${{ parameters.aws_region }}
+          **Region:** ${{ parameters.region }}
           
           ### 🏗️ Recursos que se crearán:
-          - **EKS Cluster** (t3.medium nodes)
+          {% if values.cloud_provider == 'aws' %}
+          - **EKS Cluster** (Kubernetes)
           - **ECR Repositories** (4 repos)
-          - **S3 Buckets + CloudFront** (3 frontends)
+          - **S3 + CloudFront** (3 frontends)
           - **Application Load Balancer**
-          - **VPC + Networking** (10.0.0.0/16)
+          - **VPC + Networking**
+          {% elif values.cloud_provider == 'gcp' %}
+          - **GKE Cluster** (Kubernetes)
+          - **Container Registry** (4 repos)
+          - **Cloud Storage + CDN** (3 frontends)
+          - **Load Balancer**
+          - **VPC + Networking**
+          {% elif values.cloud_provider == 'azure' %}
+          - **AKS Cluster** (Kubernetes)
+          - **Container Registry** (4 repos)
+          - **Storage Account + CDN** (3 frontends)
+          - **Application Gateway**
+          - **VNet + Networking**
+          {% elif values.cloud_provider == 'oci' %}
+          - **OKE Cluster** (Kubernetes)
+          - **Container Registry** (4 repos)
+          - **Object Storage + CDN** (3 frontends)
+          - **Load Balancer**
+          - **VCN + Networking**
+          {% endif %}
           
           ### 📂 Repositorio de Infraestructura:
           [ia-ops-iac](https://github.com/giovanemere/ia-ops-iac)
           
           ### 🚀 Siguiente paso:
           ```bash
-          cd repositories/ia-ops-iac/environments/${{ parameters.environment }}
+          cd repositories/ia-ops-iac/clouds/${{ parameters.cloud_provider }}/environments/${{ parameters.environment }}
           terragrunt plan
           terragrunt apply
           ```
+          
+          ### 💰 Costo Estimado (${{ parameters.environment }}):
+          {% if values.cloud_provider == 'aws' %}
+          {% if values.environment == 'dev' %}$170-265/mes{% elif values.environment == 'staging' %}$200-300/mes{% else %}$300-450/mes{% endif %}
+          {% elif values.cloud_provider == 'gcp' %}
+          {% if values.environment == 'dev' %}$150-240/mes{% elif values.environment == 'staging' %}$180-280/mes{% else %}$280-420/mes{% endif %}
+          {% elif values.cloud_provider == 'azure' %}
+          {% if values.environment == 'dev' %}$160-250/mes{% elif values.environment == 'staging' %}$190-290/mes{% else %}$290-440/mes{% endif %}
+          {% elif values.cloud_provider == 'oci' %}
+          {% if values.environment == 'dev' %}$140-220/mes{% elif values.environment == 'staging' %}$170-260/mes{% else %}$260-400/mes{% endif %}
+          {% endif %}
