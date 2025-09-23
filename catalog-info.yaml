@@ -1,23 +1,72 @@
 apiVersion: backstage.io/v1alpha1
-kind: Component
+kind: Location
 metadata:
-  name: templates_backstage
-  title: Templates Backstage
-  description: Plantillas para Backstage
+  name: billpay-templates
+  description: BillPay Backstage Templates
   annotations:
-    github.com/project-slug: giovanemere/templates_backstage
-    backstage.io/techdocs-ref: dir:.
+    backstage.io/managed-by-location: url:https://github.com/giovanemere/templates_backstage/blob/main/catalog-info.yaml
 spec:
-  type: service
-  lifecycle: production
+  targets:
+    - ./billpay-complete-stack/template.yaml
+---
+apiVersion: backstage.io/v1beta3
+kind: Template
+metadata:
+  name: billpay-complete-stack-refresh
+  title: 🚀 BillPay Complete Stack Multi-Cloud (Updated)
+  description: Deploy completo actualizado de la plataforma BillPay - Infraestructura + Backend + Frontends
+  tags:
+    - billpay
+    - complete-stack
+    - multi-cloud
+    - updated
+spec:
   owner: platform-team
-  system: platform
+  type: service
+  parameters:
+    - title: ☁️ Cloud Configuration
+      required: [cloud_provider, region, environment]
+      properties:
+        cloud_provider:
+          title: Cloud Provider
+          type: string
+          enum: [aws, gcp, azure, oci]
+          enumNames: ['AWS', 'GCP', 'Azure', 'OCI']
+          default: aws
+        region:
+          title: Region
+          type: string
+          default: us-east-1
+        environment:
+          title: Environment
+          type: string
+          enum: [dev, staging, prod]
+          default: dev
+    - title: 🏗️ Components to Deploy
+      properties:
+        deploy_all:
+          title: Deploy Complete Stack
+          type: boolean
+          default: true
+  steps:
+    - id: trigger-deploy
+      name: 🚀 Deploy Stack
+      action: debug:log
+      input:
+        message: "Deploying BillPay stack with cloud=${{ parameters.cloud_provider }}, region=${{ parameters.region }}, env=${{ parameters.environment }}"
+  output:
+    text:
+      - title: Deployment Info
+        content: |
+          ## 🎉 BillPay Stack Deployment
+          **Cloud:** ${{ parameters.cloud_provider }}
+          **Region:** ${{ parameters.region }}
+          **Environment:** ${{ parameters.environment }}
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
-  name: platform
-  title: Platform System
-  description: Sistema platform
+  name: billpay-platform
+  title: BillPay Platform
 spec:
   owner: platform-team

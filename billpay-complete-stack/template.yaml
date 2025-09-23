@@ -1,0 +1,242 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: billpay-complete-stack
+  title: 🚀 BillPay Complete Stack Multi-Cloud
+  description: Deploy completo de la plataforma BillPay - Infraestructura + Backend + Frontends en AWS, GCP, Azure u OCI
+  tags:
+    - billpay
+    - complete-stack
+    - multi-cloud
+    - aws
+    - gcp
+    - azure
+    - oci
+    - kubernetes
+    - microservices
+spec:
+  owner: platform-team
+  type: service
+  
+  parameters:
+    - title: ☁️ Cloud Configuration
+      required:
+        - cloud_provider
+        - region
+        - environment
+      properties:
+        cloud_provider:
+          title: Cloud Provider
+          type: string
+          description: Selecciona el proveedor de nube
+          enum:
+            - aws
+            - gcp
+            - azure
+            - oci
+          enumNames:
+            - 'AWS (Amazon Web Services)'
+            - 'GCP (Google Cloud Platform)'
+            - 'Azure (Microsoft Azure)'
+            - 'OCI (Oracle Cloud Infrastructure)'
+          default: aws
+        region:
+          title: Region
+          type: string
+          description: Región donde desplegar
+          oneOf:
+            - const: us-east-1
+              title: 'AWS: US East (N. Virginia)'
+            - const: us-west-2
+              title: 'AWS: US West (Oregon)'
+            - const: eu-west-1
+              title: 'AWS: Europe (Ireland)'
+            - const: us-central1
+              title: 'GCP: US Central'
+            - const: europe-west1
+              title: 'GCP: Europe West'
+            - const: eastus
+              title: 'Azure: East US'
+            - const: westeurope
+              title: 'Azure: West Europe'
+            - const: us-ashburn-1
+              title: 'OCI: US East (Ashburn)'
+          default: us-east-1
+        environment:
+          title: Environment
+          type: string
+          description: Ambiente donde desplegar
+          enum:
+            - dev
+            - staging
+            - prod
+          enumNames:
+            - 'Development'
+            - 'Staging' 
+            - 'Production'
+          default: dev
+        
+    - title: 🎯 Project Configuration
+      required:
+        - project_name
+      properties:
+        project_name:
+          title: Project Name
+          type: string
+          description: Nombre del proyecto
+          default: billpay
+          pattern: '^[a-z][a-z0-9-]*[a-z0-9]$'
+        
+    - title: 🏗️ Infrastructure Components
+      description: Selecciona los componentes de infraestructura a desplegar
+      properties:
+        deploy_vpc:
+          title: 🌐 VPC/Network
+          type: boolean
+          description: Red virtual privada con subnets públicas y privadas
+          default: true
+        deploy_kubernetes:
+          title: ☸️ Kubernetes Cluster
+          type: string
+          description: Cluster de Kubernetes administrado
+          enum:
+            - eks
+            - gke
+            - aks
+            - oke
+          enumNames:
+            - 'EKS (AWS)'
+            - 'GKE (Google Cloud)'
+            - 'AKS (Azure)'
+            - 'OKE (Oracle Cloud)'
+          default: eks
+        deploy_registry:
+          title: 🐳 Container Registry
+          type: boolean
+          description: Registro privado para imágenes Docker
+          default: true
+        deploy_storage:
+          title: 💾 Object Storage + CDN
+          type: boolean
+          description: Almacenamiento de objetos con CDN para frontends
+          default: true
+        deploy_loadbalancer:
+          title: ⚖️ Load Balancer
+          type: boolean
+          description: Balanceador de carga para el backend
+          default: true
+
+    - title: 🚀 Application Components
+      description: Selecciona las aplicaciones a desplegar
+      properties:
+        deploy_backend:
+          title: 🔧 Backend API
+          type: boolean
+          description: API REST con Spring Boot + Java 17
+          default: true
+        deploy_frontend_a:
+          title: 🎨 Frontend Principal
+          type: boolean
+          description: Aplicación Angular 17 con Module Federation
+          default: true
+        deploy_frontend_b:
+          title: 🎨 Frontend Secundario
+          type: boolean
+          description: Aplicación Angular 17 complementaria
+          default: true
+        deploy_feature_flags:
+          title: 🎛️ Feature Flags
+          type: boolean
+          description: Sistema de gestión de feature flags
+          default: true
+
+  steps:
+    - id: trigger-complete-deploy
+      name: 🚀 Trigger Multi-Cloud Deploy
+      action: github:actions:dispatch
+      input:
+        workflowId: deploy-complete.yml
+        repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
+        branchOrTagName: main
+        workflowInputs:
+          cloud_provider: ${{ parameters.cloud_provider }}
+          region: ${{ parameters.region }}
+          environment: ${{ parameters.environment }}
+          project_name: ${{ parameters.project_name }}
+          deploy_vpc: ${{ parameters.deploy_vpc }}
+          deploy_kubernetes: ${{ parameters.deploy_kubernetes }}
+          deploy_registry: ${{ parameters.deploy_registry }}
+          deploy_storage: ${{ parameters.deploy_storage }}
+          deploy_loadbalancer: ${{ parameters.deploy_loadbalancer }}
+          deploy_backend: ${{ parameters.deploy_backend }}
+          deploy_frontend_a: ${{ parameters.deploy_frontend_a }}
+          deploy_frontend_b: ${{ parameters.deploy_frontend_b }}
+          deploy_feature_flags: ${{ parameters.deploy_feature_flags }}
+          
+    - id: create-deployment-info
+      name: 📋 Register in Catalog
+      action: catalog:write
+      input:
+        entity:
+          apiVersion: backstage.io/v1alpha1
+          kind: Component
+          metadata:
+            name: ${{ parameters.project_name }}-${{ parameters.environment }}-${{ parameters.cloud_provider }}
+            title: ${{ parameters.project_name | title }} ${{ parameters.environment | title }} (${{ parameters.cloud_provider | upper }})
+            description: BillPay platform deployed in ${{ parameters.environment }} on ${{ parameters.cloud_provider | upper }}
+            annotations:
+              github.com/project-slug: giovanemere/billpay
+              backstage.io/techdocs-ref: dir:.
+              cloud.provider: ${{ parameters.cloud_provider }}
+              cloud.region: ${{ parameters.region }}
+            tags:
+              - billpay
+              - ${{ parameters.environment }}
+              - ${{ parameters.cloud_provider }}
+              - microservices
+          spec:
+            type: service
+            lifecycle: production
+            owner: platform-team
+            system: billpay-platform
+            dependsOn:
+              - resource:${{ parameters.project_name }}-${{ parameters.environment }}-infrastructure-${{ parameters.cloud_provider }}
+
+  output:
+    links:
+      - title: 🚀 Deployment Workflow
+        url: https://github.com/giovanemere/ia-ops-iac/actions/workflows/deploy-complete.yml
+      - title: 📊 Infrastructure Repository
+        url: https://github.com/giovanemere/ia-ops-iac
+      - title: 🎯 Main Project
+        url: https://github.com/giovanemere/billpay
+      - title: ☁️ Cloud Console (${{ parameters.cloud_provider | upper }})
+        url: ${{ parameters.cloud_provider === 'aws' and 'https://console.aws.amazon.com' or parameters.cloud_provider === 'gcp' and 'https://console.cloud.google.com' or parameters.cloud_provider === 'azure' and 'https://portal.azure.com' or 'https://cloud.oracle.com' }}
+      - title: 📋 Component in Catalog
+        entityRef: ${{ steps['create-deployment-info'].output.entityRef }}
+    text:
+      - title: 🎉 Deployment Summary
+        content: |
+          ## 🚀 BillPay Deployment Started!
+          
+          **Cloud Provider:** ${{ parameters.cloud_provider | upper }}
+          **Region:** ${{ parameters.region }}
+          **Environment:** ${{ parameters.environment }}
+          **Project:** ${{ parameters.project_name }}
+          
+          ### 🏗️ Infrastructure Components:
+          {% if parameters.deploy_vpc %}- ✅ VPC/Network{% endif %}
+          {% if parameters.deploy_kubernetes %}- ✅ Kubernetes (${{ parameters.deploy_kubernetes | upper }}){% endif %}
+          {% if parameters.deploy_registry %}- ✅ Container Registry{% endif %}
+          {% if parameters.deploy_storage %}- ✅ Object Storage + CDN{% endif %}
+          {% if parameters.deploy_loadbalancer %}- ✅ Load Balancer{% endif %}
+          
+          ### 🚀 Applications:
+          {% if parameters.deploy_backend %}- ✅ Backend API (Spring Boot){% endif %}
+          {% if parameters.deploy_frontend_a %}- ✅ Frontend Principal (Angular){% endif %}
+          {% if parameters.deploy_frontend_b %}- ✅ Frontend Secundario (Angular){% endif %}
+          {% if parameters.deploy_feature_flags %}- ✅ Feature Flags (Angular){% endif %}
+          
+          **Estimated deployment time:** 10-15 minutes
+          
+          Monitor progress in the [GitHub Actions workflow](https://github.com/giovanemere/ia-ops-iac/actions).
