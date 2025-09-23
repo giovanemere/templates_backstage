@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: billpay-infrastructure-${{ values.environment }}
+  title: BillPay Infrastructure - ${{ values.environment | title }}
+  description: Infraestructura AWS para BillPay en ambiente ${{ values.environment }}
+  annotations:
+    github.com/project-slug: giovanemere/ia-ops-iac
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - billpay
+    - infrastructure
+    - aws
+    - ${{ values.environment }}
+spec:
+  type: infrastructure
+  lifecycle: production
+  owner: platform-team
+  system: billpay-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: billpay-platform
+  title: BillPay Platform
+  description: Sistema de pagos enterprise BillPay
+spec:
+  owner: platform-team

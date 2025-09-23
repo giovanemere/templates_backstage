@@ -1,0 +1,99 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: billpay-infrastructure
+  title: BillPay Infrastructure
+  description: Template para desplegar infraestructura completa de BillPay (EKS, ECR, S3, CloudFront)
+  tags:
+    - billpay
+    - aws
+    - eks
+    - ecr
+    - s3
+    - cloudfront
+    - opentofu
+    - terragrunt
+spec:
+  owner: platform-team
+  type: infrastructure
+  
+  parameters:
+    - title: Configuración del Proyecto
+      required:
+        - environment
+        - aws_region
+      properties:
+        environment:
+          title: Environment
+          type: string
+          description: Ambiente de despliegue
+          enum:
+            - dev
+            - staging
+            - prod
+          enumNames:
+            - Development
+            - Staging
+            - Production
+        aws_region:
+          title: AWS Region
+          type: string
+          description: Región de AWS donde desplegar
+          default: us-east-1
+          enum:
+            - us-east-1
+            - us-west-2
+            - eu-west-1
+        
+    - title: Configuración de Recursos
+      properties:
+        eks_node_instance_type:
+          title: Tipo de Instancia EKS
+          type: string
+          description: Tipo de instancia para nodos EKS
+          default: t3.medium
+          enum:
+            - t3.small
+            - t3.medium
+            - t3.large
+        enable_monitoring:
+          title: Habilitar Monitoring
+          type: boolean
+          description: Habilitar CloudWatch y monitoring
+          default: true
+
+  steps:
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./content
+        values:
+          environment: ${{ parameters.environment }}
+          aws_region: ${{ parameters.aws_region }}
+          eks_node_instance_type: ${{ parameters.eks_node_instance_type }}
+          enable_monitoring: ${{ parameters.enable_monitoring }}
+
+    - id: publish
+      name: Publish to GitHub
+      action: publish:github
+      input:
+        repoUrl: github.com?repo=ia-ops-iac&owner=giovanemere
+        branch: main
+        message: 'feat: Add BillPay ${{ parameters.environment }} infrastructure'
+        gitCommitMessage: 'feat: Add BillPay ${{ parameters.environment }} infrastructure'
+
+    - id: register
+      name: Register in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
