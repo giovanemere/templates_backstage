@@ -18,7 +18,6 @@ spec:
       required:
         - project_name
         - environment
-        - deployment_type
       properties:
         project_name:
           title: Project Name
@@ -37,32 +36,9 @@ spec:
             - 'Demo Environment'
             - 'Development'
             - 'Staging'
-        deployment_type:
-          title: Deployment Type
-          type: string
-          default: simulation
-          enum:
-            - simulation
-            - real-aws-oidc
-          enumNames:
-            - 'Simulation (Demo)'
-            - 'Real AWS Simple Deployment'
   steps:
-    - id: trigger-simple-simulation
-      name: 🎭 Trigger Simple Simulation
-      if: ${{ parameters.deployment_type === 'simulation' }}
-      action: github:actions:dispatch
-      input:
-        repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
-        branchOrTagName: trunk
-        workflowId: deploy-demo-simulation.yml
-        workflowInputs:
-          project_name: ${{ parameters.project_name }}
-          environment: ${{ parameters.environment }}
-          
     - id: trigger-simple-deploy
       name: 🚀 Trigger Simple AWS Deploy
-      if: ${{ parameters.deployment_type === 'real-aws-oidc' }}
       action: github:actions:dispatch
       input:
         repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
@@ -71,38 +47,11 @@ spec:
         workflowInputs:
           project_name: ${{ parameters.project_name }}
           environment: ${{ parameters.environment }}
-    - id: create-deployment-info
-      name: 📋 Register Deployment in Catalog
-      action: catalog:write
-      input:
-        entity:
-          apiVersion: backstage.io/v1alpha1
-          kind: Component
-          metadata:
-            name: ${{ parameters.project_name }}-${{ parameters.environment }}-simple
-            title: ${{ parameters.project_name | title }} ${{ parameters.environment | title }} (Simple)
-            description: BillPay simple deployment in ${{ parameters.environment }} - S3, Lambda, CloudFront
-            annotations:
-              deployment/type: simple
-              deployment/environment: ${{ parameters.environment }}
-              deployment/method: ${{ parameters.deployment_type }}
-            links:
-              - url: https://github.com/giovanemere/ia-ops-iac/actions
-                title: Deployment Status
-                icon: cloud
-          spec:
-            type: service
-            lifecycle: production
-            owner: platform-team
-            system: billpay-platform
   output:
     links:
       - title: 🚀 Deployment Status
         url: https://github.com/giovanemere/ia-ops-iac/actions
         icon: cloud
-      - title: 📋 Component in Catalog
-        icon: catalog
-        entityRef: ${{ steps.create-deployment-info.output.entityRef }}
       - title: 📊 AWS Console
         url: https://console.aws.amazon.com/
         icon: dashboard
