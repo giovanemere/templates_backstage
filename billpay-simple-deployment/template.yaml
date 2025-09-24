@@ -23,17 +23,19 @@ spec:
           title: Project Name
           type: string
           pattern: '^[a-zA-Z0-9-_]+$'
-          description: Name for the deployment
+          description: Project Name
+          default: 'billpay-demo'
         environment:
           title: Environment
           type: string
-          default: demo
+          description: Environment
+          default: 'demo'
           enum:
             - demo
             - dev
             - staging
           enumNames:
-            - 'Demo Environment'
+            - 'Demo'
             - 'Development'
             - 'Staging'
   steps:
