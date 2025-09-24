@@ -1,0 +1,59 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: BillPay Demo - ${{ values.name }}
+  annotations:
+    github.com/project-slug: giovanemere/${{ values.name }}
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://github.com/giovanemere/${{ values.name }}/actions
+      title: GitHub Actions
+      icon: github
+    - url: https://github.com/giovanemere/ia-ops-iac/actions
+      title: AWS Deployment
+      icon: cloud
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: billpay-platform
+  providesApis:
+    - billpay-demo-api
+  consumesApis:
+    - billpay-core-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: billpay-demo-api
+  description: BillPay Demo API - ${{ values.name }}
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: billpay-platform
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: BillPay Demo API
+      version: 1.0.0
+      description: API for BillPay demo project
+    paths:
+      /health:
+        get:
+          summary: Health check
+          responses:
+            '200':
+              description: Service is healthy
+      /payments:
+        get:
+          summary: List payments
+          responses:
+            '200':
+              description: List of payments
+        post:
+          summary: Create payment
+          responses:
+            '201':
+              description: Payment created

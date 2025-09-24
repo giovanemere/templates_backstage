@@ -1,70 +1,113 @@
-# Backstage Infrastructure Templates
+# BillPay Backstage Templates
 
-Este repositorio contiene templates de Backstage para desplegar infraestructura en diferentes proveedores cloud.
+Templates de Backstage para la plataforma BillPay - Developer Self-Service Portal
 
-## Templates Disponibles
+## 🎯 Arquitectura Base de Templates
 
-### 🐳 Kubernetes
-- **kubernetes-deployment**: Deployment completo para Minikube con Service y Namespace
+### **Estructura Estándar:**
+```
+template-name/
+├── template.yaml              # Definición del template Backstage
+├── skeleton/                  # Archivos que se generarán
+│   ├── catalog-info.yaml     # Registro en catálogo Backstage
+│   ├── README.md             # Documentación del proyecto
+│   ├── .github/workflows/    # GitHub Actions
+│   │   └── deploy.yml        # Workflow de deployment
+│   └── [archivos específicos] # Configs, código, etc.
+└── docs/                     # Documentación del template
+    └── README.md
+```
 
-### ☁️ AWS
-- **aws-infrastructure**: Lambda, S3, EC2 y EKS con Terraform
+### **Flujo Estándar:**
+```
+Developer → Backstage Template → GitHub Repo → GitHub Actions → ia-ops-iac → AWS/Cloud
+```
 
-### 🔵 Azure
-- **azure-messaging**: Service Bus, Cola y Blob Storage
+## 📦 Templates Disponibles
 
-### 🟡 Google Cloud Platform
-- **gcp-storage**: Cloud Storage Bucket con Service Account
+### 🎭 **billpay-demo-simple**
+- **Propósito**: Crear proyecto demo BillPay
+- **Alcance**: Repositorio + AWS deployment básico
+- **Deployment**: Simulation o AWS real con OIDC
+- **Uso**: Demos, pruebas, aprendizaje
 
-### 🔴 Oracle Cloud Infrastructure
-- **oci-networking**: Virtual Cloud Network con Subnets
+### 🚀 **billpay-complete-stack**
+- **Propósito**: Deploy completo multi-cloud
+- **Alcance**: Infraestructura + Backend + Frontends
+- **Clouds**: AWS, GCP, Azure, OCI
+- **Deployment**: EKS/GKE/AKS + S3/Storage + CDN
+- **Uso**: Producción, staging, desarrollo
 
-## Cómo Usar
+## 🔧 Estándares de Implementación
 
-1. Navega a tu instancia de Backstage
-2. Ve a "Create Component"
-3. Selecciona el template deseado
-4. Completa los parámetros
-5. El template creará un nuevo repositorio con toda la infraestructura
+### **1. Template Metadata**
+```yaml
+metadata:
+  name: billpay-[purpose]
+  title: BillPay [Purpose Title]
+  description: [Clear description]
+  tags: [billpay, cloud, purpose]
+```
 
-## Prerrequisitos por Template
+### **2. Parameters Estándar**
+```yaml
+parameters:
+  - name: project_name (required)
+  - deployment_type: [simulation, real-aws-oidc]
+  - environment: [demo, dev, staging, prod]
+```
 
-### Kubernetes
-- `kubectl` configurado
-- Minikube ejecutándose
+### **3. Steps Estándar**
+```yaml
+steps:
+  - fetch: Template skeleton
+  - publish: Create GitHub repo
+  - register: Register in Backstage catalog
+  - trigger-deployment: Deploy via ia-ops-iac
+```
 
-### AWS
-- AWS CLI configurado
-- Terraform instalado
-- Credenciales de AWS
+### **4. Output Links Estándar**
+```yaml
+output:
+  - Repository (GitHub)
+  - Catalog (Backstage)
+  - GitHub Actions (Monitoring)
+  - AWS/Cloud Deployment (Infrastructure)
+```
 
-### Azure
-- Azure CLI configurado
-- Terraform instalado
+## 🎯 Criterios de Calidad
 
-### GCP
-- gcloud CLI configurado
-- Terraform instalado
-- Proyecto GCP existente
+### **✅ Template Debe:**
+- Crear repositorio funcional
+- Registrarse en catálogo Backstage
+- Incluir workflows de GitHub Actions
+- Disparar deployment real via ia-ops-iac
+- Incluir documentación completa
+- Seguir naming conventions
 
-### OCI
-- OCI CLI configurado
-- Terraform instalado
-- API Keys configuradas
+### **📋 Skeleton Debe Incluir:**
+- `catalog-info.yaml` con metadata correcta
+- `README.md` con badges y links
+- `.github/workflows/deploy.yml` funcional
+- Archivos de configuración necesarios
 
-## Estructura de Templates
+## 🚀 Uso
 
-Cada template incluye:
-- 📋 **template.yaml**: Definición del template de Backstage
-- 🏗️ **terraform/**: Configuración de infraestructura
-- 🚀 **scripts/**: Scripts de automatización
-- 📖 **README.md**: Documentación detallada
-- 💡 **examples/**: Ejemplos de uso (cuando aplica)
+1. **Developer** accede a Backstage: `http://localhost:3000`
+2. **Create** → Choose template
+3. **Configure** parámetros del proyecto
+4. **Deploy** automático via GitHub Actions
+5. **Monitor** en GitHub Actions + AWS Console
 
-## Contribuir
+## 🔗 Integración
 
-Para agregar nuevos templates:
-1. Crear directorio con la estructura estándar
-2. Agregar el template a `catalog-info.yaml`
-3. Documentar en este README
-4. Crear PR para revisión
+- **Backstage**: Developer portal y catálogo
+- **GitHub**: Repositorios y CI/CD
+- **ia-ops-iac**: Infrastructure deployment
+- **AWS/Cloud**: Recursos reales
+
+---
+
+**Última actualización**: 2025-09-24  
+**Templates activos**: 2  
+**Estado**: Producción

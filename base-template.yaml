@@ -1,0 +1,72 @@
+# Template base con configuraciones centralizadas
+# Este archivo define steps y configuraciones comunes para reutilizar
+
+# Steps comunes para todos los templates
+common_steps:
+  fetch_template: &fetch_template
+    id: fetch
+    name: Fetch Template
+    action: fetch:template
+    input:
+      url: ./skeleton
+
+  publish_github: &publish_github
+    id: publish
+    name: Create GitHub Repository
+    action: publish:github
+    input:
+      defaultBranch: main  # Centralizado: siempre main para nuevos repos
+      
+  register_catalog: &register_catalog
+    id: register
+    name: Register in Catalog
+    action: catalog:register
+    input:
+      repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+      catalogInfoPath: '/catalog-info.yaml'
+
+  trigger_deployment: &trigger_deployment
+    id: trigger-deployment
+    name: 🚀 Deploy to AWS
+    action: github:actions:dispatch
+    input:
+      repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
+      branchOrTagName: trunk  # Centralizado: ia-ops-iac usa trunk
+      
+# Output links comunes
+common_output: &common_output
+  links:
+    - title: Repository
+      url: ${{ steps.publish.output.remoteUrl }}
+      icon: github
+    - title: Open in catalog
+      icon: catalog
+      entityRef: ${{ steps.register.output.entityRef }}
+    - title: GitHub Actions
+      url: ${{ steps.publish.output.remoteUrl }}/actions
+      icon: deployment
+    - title: AWS Deployment Monitor
+      url: https://github.com/giovanemere/ia-ops-iac/actions
+      icon: cloud
+
+# Parámetros comunes
+common_parameters: &common_parameters
+  - title: Project Information
+    required:
+      - name
+      - deployment_type
+    properties:
+      name:
+        title: Project Name
+        type: string
+        pattern: '^[a-zA-Z0-9-_]+$'
+      deployment_type:
+        title: Deployment Type
+        type: string
+        default: simulation
+        enum:
+          - simulation
+          - real-aws-oidc
+        enumNames:
+          - 'Simulation (Demo)'
+          - 'Real AWS Deployment'

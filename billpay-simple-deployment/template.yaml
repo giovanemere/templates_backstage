@@ -1,0 +1,82 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: billpay-simple-deployment
+  title: BillPay Simple Deployment
+  description: Simple BillPay deployment without EKS (S3, Lambda, CloudFront)
+  tags:
+    - billpay
+    - simple
+    - aws
+    - s3
+spec:
+  owner: platform-team
+  type: service
+  parameters:
+    - title: Project Information
+      required:
+        - name
+        - deployment_type
+      properties:
+        name:
+          title: Project Name
+          type: string
+          pattern: '^[a-zA-Z0-9-_]+$'
+        deployment_type:
+          title: Deployment Type
+          type: string
+          default: simulation
+          enum:
+            - simulation
+            - real-aws-oidc
+          enumNames:
+            - 'Simulation (Demo)'
+            - 'Real AWS Deployment'
+  steps:
+    - id: fetch
+      name: Fetch Template
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          deployment_type: ${{ parameters.deployment_type }}
+    - id: publish
+      name: Create GitHub Repository
+      action: publish:github
+      input:
+        description: BillPay Simple - ${{ parameters.name }}
+        repoUrl: github.com?repo=${{ parameters.name }}&owner=giovanemere
+        defaultBranch: main
+    - id: register
+      name: Register in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+    - id: trigger-deployment
+      name: 🚀 Deploy to AWS
+      if: ${{ parameters.deployment_type !== 'simulation' }}
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
+        branchOrTagName: trunk
+        workflowId: deploy-simple.yml
+        workflowInputs:
+          project_name: ${{ parameters.name }}
+          environment: demo
+          deployment_type: ${{ parameters.deployment_type }}
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+        icon: github
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
+      - title: GitHub Actions
+        url: ${{ steps.publish.output.remoteUrl }}/actions
+        icon: deployment
+      - title: AWS Deployment Monitor
+        url: https://github.com/giovanemere/ia-ops-iac/actions
+        icon: cloud

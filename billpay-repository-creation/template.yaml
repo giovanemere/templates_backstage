@@ -1,0 +1,85 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: billpay-repository-creation
+  title: BillPay Repository Creation
+  description: Create a new BillPay repository with basic AWS deployment
+  tags:
+    - billpay
+    - repository
+    - aws
+    - creation
+    - simple
+spec:
+  owner: platform-team
+  type: service
+  parameters:
+    - title: Project Information
+      required:
+        - name
+        - deployment_type
+      properties:
+        name:
+          title: Project Name
+          type: string
+          description: Name for your new BillPay demo project
+          pattern: '^[a-zA-Z0-9-_]+$'
+        deployment_type:
+          title: Deployment Type
+          type: string
+          description: Choose deployment method
+          default: simulation
+          enum:
+            - simulation
+            - real-aws-oidc
+          enumNames:
+            - 'Simulation (Demo)'
+            - 'Real AWS Deployment'
+  steps:
+    - id: fetch
+      name: Fetch Template
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          deployment_type: ${{ parameters.deployment_type }}
+    - id: publish
+      name: Create GitHub Repository
+      action: publish:github
+      input:
+        description: BillPay Project - ${{ parameters.name }}
+        repoUrl: github.com?repo=${{ parameters.name }}&owner=giovanemere
+        defaultBranch: main
+    - id: register
+      name: Register in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+    - id: trigger-deployment
+      name: 🚀 Deploy to AWS
+      if: ${{ parameters.deployment_type === 'real-aws-oidc' }}
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
+        branchOrTagName: trunk  # Centralizado: ia-ops-iac siempre usa trunk
+        workflowId: deploy-demo.yml
+        workflowInputs:
+          project_name: ${{ parameters.name }}
+          environment: demo
+          deployment_type: ${{ parameters.deployment_type }}
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+        icon: github
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
+      - title: GitHub Actions
+        url: ${{ steps.publish.output.remoteUrl }}/actions
+        icon: deployment
+      - title: AWS Deployment Monitor
+        url: https://github.com/giovanemere/ia-ops-iac/actions
+        icon: cloud

@@ -157,21 +157,14 @@ spec:
       input:
         workflowId: deploy-complete.yml
         repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
-        branchOrTagName: main
+        branchOrTagName: trunk
         workflowInputs:
           cloud_provider: ${{ parameters.cloud_provider }}
           region: ${{ parameters.region }}
           environment: ${{ parameters.environment }}
           project_name: ${{ parameters.project_name }}
-          deploy_vpc: ${{ parameters.deploy_vpc }}
-          deploy_kubernetes: ${{ parameters.deploy_kubernetes }}
-          deploy_registry: ${{ parameters.deploy_registry }}
-          deploy_storage: ${{ parameters.deploy_storage }}
-          deploy_loadbalancer: ${{ parameters.deploy_loadbalancer }}
-          deploy_backend: ${{ parameters.deploy_backend }}
-          deploy_frontend_a: ${{ parameters.deploy_frontend_a }}
-          deploy_frontend_b: ${{ parameters.deploy_frontend_b }}
-          deploy_feature_flags: ${{ parameters.deploy_feature_flags }}
+          deploy_infrastructure: ${{ parameters.deploy_vpc | string }},${{ parameters.deploy_kubernetes | string }},${{ parameters.deploy_registry | string }},${{ parameters.deploy_storage | string }},${{ parameters.deploy_loadbalancer | string }}
+          deploy_services: ${{ parameters.deploy_backend | string }},${{ parameters.deploy_frontend_a | string }},${{ parameters.deploy_frontend_b | string }},${{ parameters.deploy_feature_flags | string }}
           
     - id: create-deployment-info
       name: 📋 Register in Catalog

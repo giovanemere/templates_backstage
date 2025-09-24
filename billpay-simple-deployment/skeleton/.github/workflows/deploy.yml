@@ -1,0 +1,40 @@
+name: Deploy
+on:
+  push:
+    branches: [main, trunk]
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Deployment Type'
+        required: true
+        default: '${{ values.deployment_type }}'
+        type: choice
+        options:
+          - simulation
+          - real-aws-oidc
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: 🎭 Simulation Deploy
+        if: github.event.inputs.deployment_type == 'simulation' || '${{ values.deployment_type }}' == 'simulation'
+        run: |
+          echo "🎭 BillPay Simple Simulation Deployment"
+          echo "📦 Project: ${{ values.name }}"
+          echo "✅ S3 Bucket: ${{ values.name }}-frontend"
+          echo "✅ Lambda: ${{ values.name }}-api"
+          echo "✅ CloudFront: https://${{ values.name }}.demo.billpay.com"
+          echo "🎉 Simple deployment completed successfully!"
+          
+      - name: 🚀 Real AWS Simple Deployment
+        if: github.event.inputs.deployment_type == 'real-aws-oidc' || '${{ values.deployment_type }}' == 'real-aws-oidc'
+        run: |
+          echo "🚀 Starting real AWS simple deployment"
+          echo "📦 Project: ${{ values.name }}"
+          echo "🔐 Using OIDC authentication"
+          echo "☁️ Deploying: S3 + Lambda + CloudFront"
+          echo "📍 Deployment handled by ia-ops-iac (trunk branch)"
+          echo "🔗 Monitor at: https://github.com/giovanemere/ia-ops-iac/actions"

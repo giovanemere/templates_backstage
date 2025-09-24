@@ -1,0 +1,39 @@
+# Configuración compartida para todos los templates BillPay
+# Este archivo centraliza configuraciones comunes para evitar inconsistencias
+
+# Configuración de repositorios
+repositories:
+  ia-ops-iac:
+    owner: giovanemere
+    repo: ia-ops-iac
+    branch: trunk  # Rama principal del repo de infraestructura
+    workflows:
+      demo: deploy-demo.yml
+      complete: deploy-complete.yml
+      cleanup: cleanup.yml
+  
+  templates_backstage:
+    owner: giovanemere
+    repo: templates_backstage
+    branch: main  # Rama principal de templates
+  
+  default_project:
+    branch: main  # Rama por defecto para proyectos nuevos
+
+# Configuración de workflows
+workflows:
+  trigger_branches: [main, trunk]  # Ramas que disparan workflows
+  default_branch: main  # Rama por defecto para nuevos repos
+
+# URLs base
+urls:
+  github_api: https://api.github.com
+  github_repos: https://github.com/giovanemere
+
+# Configuración de deployment
+deployment:
+  default_environment: demo
+  supported_types:
+    - simulation
+    - real-aws-oidc
+    - real-aws-legacy

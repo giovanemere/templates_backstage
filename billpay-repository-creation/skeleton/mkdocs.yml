@@ -1,0 +1,23 @@
+site_name: '${{ values.name }} Documentation'
+site_description: 'BillPay Demo Project - ${{ values.name }}'
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - API Reference: api.md
+  - Deployment: deployment.md
+  - Monitoring: monitoring.md
+
+theme:
+  name: material
+  palette:
+    primary: blue
+    accent: blue
+
+plugins:
+  - techdocs-core
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences

@@ -1,0 +1,94 @@
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: billpay-core-api
+  title: BillPay Core API
+  description: Core API for BillPay platform - Authentication, Users, Transactions
+  tags:
+    - billpay
+    - core
+    - api
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: billpay-platform
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: BillPay Core API
+      version: 2.0.0
+      description: Core API for BillPay platform with authentication and transaction management
+    servers:
+      - url: https://api.billpay.com/v2
+        description: Production server
+      - url: https://api-staging.billpay.com/v2
+        description: Staging server
+    paths:
+      /auth/login:
+        post:
+          summary: User authentication
+          tags: [Authentication]
+          responses:
+            '200':
+              description: Login successful
+            '401':
+              description: Invalid credentials
+      /auth/refresh:
+        post:
+          summary: Refresh access token
+          tags: [Authentication]
+          responses:
+            '200':
+              description: Token refreshed
+      /users/profile:
+        get:
+          summary: Get user profile
+          tags: [Users]
+          responses:
+            '200':
+              description: User profile data
+      /transactions:
+        get:
+          summary: List user transactions
+          tags: [Transactions]
+          responses:
+            '200':
+              description: List of transactions
+        post:
+          summary: Create new transaction
+          tags: [Transactions]
+          responses:
+            '201':
+              description: Transaction created
+      /transactions/{id}:
+        get:
+          summary: Get transaction details
+          tags: [Transactions]
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '200':
+              description: Transaction details
+            '404':
+              description: Transaction not found
+      /payments/process:
+        post:
+          summary: Process payment
+          tags: [Payments]
+          responses:
+            '200':
+              description: Payment processed
+            '400':
+              description: Payment failed
+      /health:
+        get:
+          summary: API health check
+          tags: [System]
+          responses:
+            '200':
+              description: API is healthy

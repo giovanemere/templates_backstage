@@ -2,18 +2,27 @@ apiVersion: backstage.io/v1alpha1
 kind: Location
 metadata:
   name: billpay-templates
-  description: BillPay Backstage Templates
+  description: BillPay Backstage Templates - Developer Self-Service Portal
   annotations:
     backstage.io/managed-by-location: url:https://github.com/giovanemere/templates_backstage/blob/main/catalog-info.yaml
 spec:
   targets:
+    - ./billpay-repository-creation/template.yaml
+    - ./billpay-simple-deployment/template.yaml
     - ./billpay-complete-stack/template.yaml
+    - ./billpay-core-api.yaml
+    - ./system-info.yaml
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: billpay-platform
   title: BillPay Platform
-  description: Sistema completo de pagos enterprise con microservicios
+  description: Sistema completo de pagos enterprise con microservicios y Developer Self-Service
+  tags:
+    - billpay
+    - platform
+    - microservices
+    - developer-portal
 spec:
   owner: platform-team

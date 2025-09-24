@@ -1,0 +1,38 @@
+name: Deploy
+on:
+  push:
+    branches: [main, trunk]  # Centralizado: acepta ambas ramas
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Deployment Type'
+        required: true
+        default: '${{ values.deployment_type }}'
+        type: choice
+        options:
+          - simulation
+          - real-aws-oidc
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: 🎭 Simulation Deploy
+        if: github.event.inputs.deployment_type == 'simulation' || '${{ values.deployment_type }}' == 'simulation'
+        run: |
+          echo "🎭 BillPay Simulation Deployment"
+          echo "📦 Project: ${{ values.name }}"
+          echo "✅ Frontend: https://${{ values.name }}.demo.billpay.com"
+          echo "✅ Backend API: https://api-${{ values.name }}.demo.billpay.com"
+          echo "🎉 Simulation completed successfully!"
+          
+      - name: 🚀 Real AWS Deployment
+        if: github.event.inputs.deployment_type == 'real-aws-oidc' || '${{ values.deployment_type }}' == 'real-aws-oidc'
+        run: |
+          echo "🚀 Starting real AWS deployment"
+          echo "📦 Project: ${{ values.name }}"
+          echo "🔐 Using OIDC authentication"
+          echo "📍 Deployment handled by ia-ops-iac (trunk branch)"
+          echo "🔗 Monitor at: https://github.com/giovanemere/ia-ops-iac/actions"

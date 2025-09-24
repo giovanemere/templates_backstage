@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: billpay-platform
+  description: BillPay Enterprise Payment Platform
+spec:
+  owner: platform-team
+  domain: payments
+---
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: payments
+  description: Payment processing domain
+spec:
+  owner: platform-team
