@@ -48,8 +48,21 @@ spec:
             - 'Simulation (Demo)'
             - 'Real AWS Simple Deployment'
   steps:
+    - id: trigger-simple-simulation
+      name: 🎭 Trigger Simple Simulation
+      if: ${{ parameters.deployment_type === 'simulation' }}
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
+        branchOrTagName: trunk
+        workflowId: deploy-demo-simulation.yml
+        workflowInputs:
+          project_name: ${{ parameters.project_name }}
+          environment: ${{ parameters.environment }}
+          
     - id: trigger-simple-deploy
       name: 🚀 Trigger Simple AWS Deploy
+      if: ${{ parameters.deployment_type === 'real-aws-oidc' }}
       action: github:actions:dispatch
       input:
         repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
@@ -58,8 +71,6 @@ spec:
         workflowInputs:
           project_name: ${{ parameters.project_name }}
           environment: ${{ parameters.environment }}
-          deployment_type: ${{ parameters.deployment_type }}
-          
     - id: create-deployment-info
       name: 📋 Register Deployment in Catalog
       action: catalog:write
