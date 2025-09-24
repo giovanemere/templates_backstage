@@ -3,25 +3,40 @@ kind: Template
 metadata:
   name: billpay-simple-deployment
   title: BillPay Simple Deployment
-  description: Simple BillPay deployment without EKS (S3, Lambda, CloudFront)
+  description: Simple BillPay deployment without EKS (S3, Lambda, CloudFront) - No repository creation
   tags:
     - billpay
     - simple
     - aws
     - s3
+    - deployment-only
 spec:
   owner: platform-team
   type: service
   parameters:
-    - title: Project Information
+    - title: Deployment Configuration
       required:
-        - name
+        - project_name
+        - environment
         - deployment_type
       properties:
-        name:
+        project_name:
           title: Project Name
           type: string
           pattern: '^[a-zA-Z0-9-_]+$'
+          description: Name for the deployment
+        environment:
+          title: Environment
+          type: string
+          default: demo
+          enum:
+            - demo
+            - dev
+            - staging
+          enumNames:
+            - 'Demo Environment'
+            - 'Development'
+            - 'Staging'
         deployment_type:
           title: Deployment Type
           type: string
@@ -31,52 +46,52 @@ spec:
             - real-aws-oidc
           enumNames:
             - 'Simulation (Demo)'
-            - 'Real AWS Deployment'
+            - 'Real AWS Simple Deployment'
   steps:
-    - id: fetch
-      name: Fetch Template
-      action: fetch:template
-      input:
-        url: ./skeleton
-        values:
-          name: ${{ parameters.name }}
-          deployment_type: ${{ parameters.deployment_type }}
-    - id: publish
-      name: Create GitHub Repository
-      action: publish:github
-      input:
-        description: BillPay Simple - ${{ parameters.name }}
-        repoUrl: github.com?repo=${{ parameters.name }}&owner=giovanemere
-        defaultBranch: main
-    - id: register
-      name: Register in Catalog
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
-        catalogInfoPath: '/catalog-info.yaml'
-    - id: trigger-deployment
-      name: 🚀 Deploy to AWS
-      if: ${{ parameters.deployment_type !== 'simulation' }}
+    - id: trigger-simple-deploy
+      name: 🚀 Trigger Simple AWS Deploy
       action: github:actions:dispatch
       input:
         repoUrl: github.com?owner=giovanemere&repo=ia-ops-iac
         branchOrTagName: trunk
         workflowId: deploy-simple.yml
         workflowInputs:
-          project_name: ${{ parameters.name }}
-          environment: demo
+          project_name: ${{ parameters.project_name }}
+          environment: ${{ parameters.environment }}
           deployment_type: ${{ parameters.deployment_type }}
+          
+    - id: create-deployment-info
+      name: 📋 Register Deployment in Catalog
+      action: catalog:write
+      input:
+        entity:
+          apiVersion: backstage.io/v1alpha1
+          kind: Component
+          metadata:
+            name: ${{ parameters.project_name }}-${{ parameters.environment }}-simple
+            title: ${{ parameters.project_name | title }} ${{ parameters.environment | title }} (Simple)
+            description: BillPay simple deployment in ${{ parameters.environment }} - S3, Lambda, CloudFront
+            annotations:
+              deployment/type: simple
+              deployment/environment: ${{ parameters.environment }}
+              deployment/method: ${{ parameters.deployment_type }}
+            links:
+              - url: https://github.com/giovanemere/ia-ops-iac/actions
+                title: Deployment Status
+                icon: cloud
+          spec:
+            type: service
+            lifecycle: production
+            owner: platform-team
+            system: billpay-platform
   output:
     links:
-      - title: Repository
-        url: ${{ steps.publish.output.remoteUrl }}
-        icon: github
-      - title: Open in catalog
-        icon: catalog
-        entityRef: ${{ steps.register.output.entityRef }}
-      - title: GitHub Actions
-        url: ${{ steps.publish.output.remoteUrl }}/actions
-        icon: deployment
-      - title: AWS Deployment Monitor
+      - title: 🚀 Deployment Status
         url: https://github.com/giovanemere/ia-ops-iac/actions
         icon: cloud
+      - title: 📋 Component in Catalog
+        icon: catalog
+        entityRef: ${{ steps.create-deployment-info.output.entityRef }}
+      - title: 📊 AWS Console
+        url: https://console.aws.amazon.com/
+        icon: dashboard
