@@ -79,6 +79,7 @@ spec:
     - title: 🎯 Project Configuration
       required:
         - project_name
+        - deployment_type
       properties:
         project_name:
           title: Project Name
@@ -86,6 +87,19 @@ spec:
           description: Nombre del proyecto
           default: billpay
           pattern: '^[a-z][a-z0-9-]*[a-z0-9]$'
+        deployment_type:
+          title: Deployment Type
+          type: string
+          description: Tipo de despliegue
+          enum:
+            - simulation
+            - real-aws-oidc
+            - real-aws-legacy
+          enumNames:
+            - '🎭 Simulation (No AWS costs, demo purposes)'
+            - '🔐 Real AWS with OIDC (Secure, recommended)'
+            - '☁️ Real AWS Legacy (Requires AWS credentials)'
+          default: simulation
         
     - title: 🏗️ Infrastructure Components
       description: Selecciona los componentes de infraestructura a desplegar
@@ -163,6 +177,7 @@ spec:
           region: ${{ parameters.region }}
           environment: ${{ parameters.environment }}
           project_name: ${{ parameters.project_name }}
+          deployment_type: ${{ parameters.deployment_type }}
           deploy_infrastructure: ${{ parameters.deploy_vpc | string }},${{ parameters.deploy_kubernetes | string }},${{ parameters.deploy_registry | string }},${{ parameters.deploy_storage | string }},${{ parameters.deploy_loadbalancer | string }}
           deploy_services: ${{ parameters.deploy_backend | string }},${{ parameters.deploy_frontend_a | string }},${{ parameters.deploy_frontend_b | string }},${{ parameters.deploy_feature_flags | string }}
           
@@ -197,25 +212,48 @@ spec:
 
   output:
     links:
-      - title: 🚀 Deployment Workflow
+      - title: 🚀 Live Deployment Logs
         url: https://github.com/giovanemere/ia-ops-iac/actions/workflows/deploy-complete.yml
+        icon: cloud
       - title: 📊 Infrastructure Repository
         url: https://github.com/giovanemere/ia-ops-iac
+        icon: github
       - title: 🎯 Main Project
         url: https://github.com/giovanemere/billpay
+        icon: github
       - title: ☁️ Cloud Console (${{ parameters.cloud_provider | upper }})
         url: ${{ parameters.cloud_provider === 'aws' and 'https://console.aws.amazon.com' or parameters.cloud_provider === 'gcp' and 'https://console.cloud.google.com' or parameters.cloud_provider === 'azure' and 'https://portal.azure.com' or 'https://cloud.oracle.com' }}
+        icon: dashboard
       - title: 📋 Component in Catalog
         entityRef: ${{ steps['create-deployment-info'].output.entityRef }}
+        icon: catalog
     text:
       - title: 🎉 Deployment Summary
         content: |
-          ## 🚀 BillPay Deployment Started!
+          ## 🚀 BillPay Complete Stack Deployment Started!
           
-          **Cloud Provider:** ${{ parameters.cloud_provider | upper }}
-          **Region:** ${{ parameters.region }}
-          **Environment:** ${{ parameters.environment }}
-          **Project:** ${{ parameters.project_name }}
+          **☁️ Cloud Provider:** ${{ parameters.cloud_provider | upper }}
+          **🌍 Region:** ${{ parameters.region }}
+          **🎯 Environment:** ${{ parameters.environment }}
+          **📦 Project:** ${{ parameters.project_name }}
+          **🔧 Type:** ${{ parameters.deployment_type }}
+          
+          ### 🔍 Monitor Real-time Progress:
+          [**🚀 GitHub Actions Logs**](https://github.com/giovanemere/ia-ops-iac/actions) ← **Live deployment status!**
+          
+          {% if parameters.deployment_type == "simulation" %}
+          ### 🎭 Simulation Mode:
+          - ✅ **No AWS costs** - Completely free demo
+          - ✅ **No credentials needed** - Works immediately  
+          - ✅ **Full process simulation** - Shows complete workflow
+          - ⏱️ **Duration:** ~5-8 minutes
+          {% else %}
+          ### ☁️ Real Infrastructure Mode:
+          - 🏗️ **Real cloud resources** creation
+          - 🚀 **Actual applications** deployment
+          - 💰 **Cloud costs** apply (~$170-450/month depending on environment)
+          - ⏱️ **Duration:** ~15-25 minutes
+          {% endif %}
           
           ### 🏗️ Infrastructure Components:
           {% if parameters.deploy_vpc %}- ✅ VPC/Network{% endif %}
@@ -230,6 +268,4 @@ spec:
           {% if parameters.deploy_frontend_b %}- ✅ Frontend Secundario (Angular){% endif %}
           {% if parameters.deploy_feature_flags %}- ✅ Feature Flags (Angular){% endif %}
           
-          **Estimated deployment time:** 10-15 minutes
-          
-          Monitor progress in the [GitHub Actions workflow](https://github.com/giovanemere/ia-ops-iac/actions).
+          **📊 Monitor progress in real-time:** [GitHub Actions](https://github.com/giovanemere/ia-ops-iac/actions)
